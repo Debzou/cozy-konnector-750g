@@ -13,7 +13,6 @@ const rp = require('request-promise')
 const cheerio = require('cheerio')
 // const moment = require('moment')
 
-
 // ###################
 // ##  CONSTANT
 // ###################
@@ -55,16 +54,17 @@ async function authenticate(fields) {
     },
     followAllRedirects: true
   }
-  // request 
+  // request
   const authRequestLength = Buffer.byteLength(qs.stringify(authRequest.form))
   authRequest.headers['Content-Length'] = authRequestLength
   return rp(authRequest)
     .catch(() => {
       throw new Error(errors.LOGIN_FAILED)
-    }).then((html)=> getName(html))
+    })
+    .then(html => getName(html))
 }
 
-async function getName(html){
-  const $ = cheerio.load(html);
-  log('info',$(''))
+async function getName(html) {
+  const $ = cheerio.load(html)
+  log('info', $(''))
 }
