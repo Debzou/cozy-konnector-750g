@@ -7,11 +7,12 @@
 // ##  LIBRARY
 // ###################
 
-const { BaseKonnector, log } = require('cozy-konnector-libs')
+const { BaseKonnector, log, errors } = require('cozy-konnector-libs')
 const qs = require('querystring')
 const rp = require('request-promise')
+const cheerio = require('cheerio')
 // const moment = require('moment')
-// const cheerio = require('cheerio')
+
 
 // ###################
 // ##  CONSTANT
@@ -36,10 +37,11 @@ async function start(fields) {
   }
 }
 
-function authenticate(fields) {
+async function authenticate(fields) {
+  // go inspected element : network > hearder & cookie & request
   const authRequest = {
     method: 'POST',
-    uri: 'https://www.750g.com/connexion.htm',
+    uri: 'https://www.750g.com/login_check',
     jar: cookiejar,
     headers: {
       Host: 'www.750g.com',
@@ -47,16 +49,22 @@ function authenticate(fields) {
     },
     form: {
       email: fields.login,
-      password: fields.password
+      password: fields.password,
+      redirect_url: '',
+      client_id: ''
     },
     followAllRedirects: true
   }
-  // Reset Content-Length header since Enedis auth wants Title-Cased Headers
+  // request 
   const authRequestLength = Buffer.byteLength(qs.stringify(authRequest.form))
   authRequest.headers['Content-Length'] = authRequestLength
   return rp(authRequest)
     .catch(() => {
       throw new Error(errors.LOGIN_FAILED)
-    })
-    .then($ => log('info', $))
+    }).then((html)=> getName(html))
+}
+
+async function getName(html){
+  const $ = cheerio.load(html);
+  log('info',$(''))
 }
