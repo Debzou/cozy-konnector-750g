@@ -11,13 +11,11 @@ const { BaseKonnector, log, errors } = require('cozy-konnector-libs')
 const qs = require('querystring')
 const rp = require('request-promise')
 const cheerio = require('cheerio')
-const fs = require('fs')
-// const moment = require('moment')
 
 // ###################
 // ##  CONSTANT
 // ###################
-
+const baseurl = 'https://www.750g.com'
 const cookiejar = rp.jar()
 
 // ###################
@@ -32,16 +30,20 @@ async function start(fields) {
   try {
     await authenticate(fields)
     log('info', 'Successfully logged in')
+    log('info', 'get page ...')
+    const page = await getPage('https://www.750g.com/home_rubrique_-_recettes.htm')
+    log('info', 'get Category ...')
+    await getCategory(page)    
   } catch (error) {
     throw new Error(error.message)
   }
 }
 
 async function authenticate(fields) {
-  // go inspected element : network > hearder & cookie & request
+
   const authRequest = {
     method: 'POST',
-    uri: 'https://www.750g.com/login_check',
+    uri: `${baseurl}/login_check`,
     jar: cookiejar,
     headers: {
       Host: 'www.750g.com',
@@ -65,20 +67,38 @@ async function authenticate(fields) {
     .then(html => getName(html))
 }
 
+
 async function getName(html) {
   // load html
   const $ = cheerio.load(html)
 
   // scrape pseudo
-  const value = $('span .c-header-details__label-truncate')
+  const pseudo = $('span .c-header-details__label-truncate')
     .text()
     .trim()
 
-  // save html
-  fs.writeFile('./html.html', $.text(), err => {
-    if (err) return log('info', err)
-  })
-
   // display pseudo
-  log('info', value)
+  log('info', pseudo)
 }
+
+async function getPage(url){
+  const options = {
+    uri: url,
+    transform: function (body) {
+      return cheerio.load(body);
+    }
+  };
+  
+  return rp(options)
+}
+
+async function getCategory($){
+  $('div .c-link-img-txt-col__header').each( 
+    (index,element) => {
+      let link = $(element).find('a').attr('href') 
+      let category_name = $(element).find('span').text()
+      log('info',link)
+      log('info',category_name)
+    }) 
+}
+
