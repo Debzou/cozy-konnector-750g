@@ -15,6 +15,7 @@ const cheerio = require('cheerio')
 // ###################
 // ##  CONSTANT
 // ###################
+
 const baseurl = 'https://www.750g.com'
 const cookiejar = rp.jar()
 
@@ -31,16 +32,18 @@ async function start(fields) {
     await authenticate(fields)
     log('info', 'Successfully logged in')
     log('info', 'get page ...')
-    const page = await getPage('https://www.750g.com/home_rubrique_-_recettes.htm')
+    const page = await getPage(
+      'https://www.750g.com/home_rubrique_-_recettes.htm'
+    )
     log('info', 'get Category ...')
-    await getCategory(page)    
+    const dictCategory = await getCategory(page)
+    await getRecipe(dictCategory)
   } catch (error) {
     throw new Error(error.message)
   }
 }
 
 async function authenticate(fields) {
-
   const authRequest = {
     method: 'POST',
     uri: `${baseurl}/login_check`,
@@ -67,7 +70,6 @@ async function authenticate(fields) {
     .then(html => getName(html))
 }
 
-
 async function getName(html) {
   // load html
   const $ = cheerio.load(html)
@@ -81,24 +83,34 @@ async function getName(html) {
   log('info', pseudo)
 }
 
-async function getPage(url){
+async function getPage(url) {
   const options = {
     uri: url,
-    transform: function (body) {
-      return cheerio.load(body);
+    transform: function(body) {
+      return cheerio.load(body)
     }
-  };
-  
+  }
+
   return rp(options)
 }
 
-async function getCategory($){
-  $('div .c-link-img-txt-col__header').each( 
-    (index,element) => {
-      let link = $(element).find('a').attr('href') 
-      let category_name = $(element).find('span').text()
-      log('info',link)
-      log('info',category_name)
-    }) 
+async function getCategory($) {
+  const dictCategory = new Object()
+  $('div .c-link-img-txt-col__header').each((index, element) => {
+    let link = baseurl + $(element)
+      .find('a')
+      .attr('href')
+    let category_name = $(element)
+      .find('span')
+      .text()
+      .replace('\'', '')
+    log('info', link)
+    log('info', category_name)
+    dictCategory[category_name] = link    
+  })
+  return dictCategory
 }
 
+async function getRecipe(dict){
+  log('info',dict)
+}
