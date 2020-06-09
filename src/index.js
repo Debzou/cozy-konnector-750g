@@ -66,12 +66,19 @@ async function authenticate(fields) {
 }
 
 async function getName(html) {
+  // load html
   const $ = cheerio.load(html)
+
+  // scrape pseudo
   const value = $('span .c-header-details__label-truncate')
     .text()
     .trim()
+
+  // save html
   fs.writeFile('./html.html', $.text(), err => {
-    if (err) return console.log(err)
+    if (err) return log('info', err)
   })
+
+  // display pseudo
   log('info', value)
 }
