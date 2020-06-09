@@ -11,6 +11,7 @@ const { BaseKonnector, log, errors } = require('cozy-konnector-libs')
 const qs = require('querystring')
 const rp = require('request-promise')
 const cheerio = require('cheerio')
+const fs = require('fs')
 // const moment = require('moment')
 
 // ###################
@@ -66,5 +67,11 @@ async function authenticate(fields) {
 
 async function getName(html) {
   const $ = cheerio.load(html)
-  log('info', $(''))
+  const value = $('span .c-header-details__label-truncate')
+    .text()
+    .trim()
+  fs.writeFile('./html.html', $.text(), err => {
+    if (err) return console.log(err)
+  })
+  log('info', value)
 }
