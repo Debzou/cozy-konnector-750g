@@ -95,7 +95,7 @@ async function getPage(url) {
 }
 
 async function getCategory($) {
-  const dictCategory = new Object()
+  let dictCategory = new Object()
   $('div .c-link-img-txt-col__header').each((index, element) => {
     let link = baseurl + $(element)
       .find('a')
@@ -104,13 +104,30 @@ async function getCategory($) {
       .find('span')
       .text()
       .replace('\'', '')
-    log('info', link)
-    log('info', category_name)
     dictCategory[category_name] = link    
   })
   return dictCategory
 }
 
 async function getRecipe(dict){
-  log('info',dict)
+  let dictRecipe = new Object()
+  for(let attr in dict){
+    log('info',`scrape the page ${dict[attr]} ...`)
+    // init array
+    dictRecipe[attr] = []  
+    // get html
+    let $ = await getPage(dict[attr])
+    // gather names of recipes
+    $('.c-row__body').each((index, element) => {
+      // init recipe 
+      let recipe = new Object()
+      let title = $(element).find('a').text()
+      let link = baseurl + $(element).find('a').attr('href')    
+      // create dictionary of recipes
+      recipe.title = title
+      recipe.link = link
+      dictRecipe[attr].push(recipe)   
+    })
+    
+  }
 }
