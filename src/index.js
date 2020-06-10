@@ -7,7 +7,7 @@
 // ##  LIBRARY
 // ###################
 
-const { BaseKonnector, log, errors } = require('cozy-konnector-libs')
+const { BaseKonnector, log, errors, addData } = require('cozy-konnector-libs')
 const qs = require('querystring')
 const rp = require('request-promise')
 const cheerio = require('cheerio')
@@ -18,10 +18,9 @@ const cheerio = require('cheerio')
 
 const baseurl = 'https://www.750g.com'
 const cookiejar = rp.jar()
-// scrapping by page 
 // you can fix a limit (if you want)
 const minpage = 0
-const maxpage = 10
+const maxpage = 3
 
 // ###################
 // ##  Konnector
@@ -41,7 +40,9 @@ async function start(fields) {
     )
     log('info', 'get Category ...')
     const dictCategory = await getCategory(page)
-    await getRecipe(dictCategory)
+    const dictRecipes = await getRecipe(dictCategory)
+    log('info', 'store data ...')
+    await storeData(dictRecipes)
   } catch (error) {
     throw new Error(error.message)
   }
@@ -101,46 +102,58 @@ async function getPage(url) {
 async function getCategory($) {
   let dictCategory = new Object()
   $('div .c-link-img-txt-col__header').each((index, element) => {
-    let link = baseurl + $(element)
-      .find('a')
-      .attr('href')
+    let link =
+      baseurl +
+      $(element)
+        .find('a')
+        .attr('href')
     let category_name = $(element)
       .find('span')
       .text()
-      .replace('\'', '')
-    dictCategory[category_name] = link    
+      .replace("'", '')
+    dictCategory[category_name] = link
   })
   return dictCategory
 }
 
-async function getRecipe(dict){
-  let dictRecipe = new Object()
-  for(let attr in dict){
+async function getRecipe(dict) {
+  let dictRecipe = new Array()
+  for (let attr in dict) {
     // init numero page
     let numpage = minpage
-    // init array
-    dictRecipe[attr] = []  
-    while( (numpage !== -1) && (numpage < maxpage)){
-      log('info',`scrape the page ${dict[attr]}?page=${numpage} ...`)
+
+    while (numpage !== -1 && numpage < maxpage) {
+      log('info', `scrape the page ${dict[attr]}?page=${numpage} ...`)
       // get html
       let $ = await getPage(`${dict[attr]}?page=${numpage}`)
       // gather names of recipes
-      if($('.c-row__body').length > 0){
+      if ($('.c-row__body').length > 0) {
         numpage += 1
         $('.c-row__body').each((index, element) => {
-          // init recipe 
+          // init recipe
           let recipe = new Object()
-          let title = $(element).find('a').text()
-          let link = baseurl + $(element).find('a').attr('href')   
+          let title = $(element)
+            .find('a')
+            .text()
+          let link =
+            baseurl +
+            $(element)
+              .find('a')
+              .attr('href')
           // create dictionary of recipes
+          recipe.category = dict[attr]
           recipe.title = title
           recipe.link = link
-          dictRecipe[attr].push(recipe)   
+          dictRecipe.push(recipe)
         })
-      }else{
+      } else {
         numpage = -1
       }
-    }   
+    }
   }
-  log('info',dictRecipe)
+  return dictRecipe
+}
+
+async function storeData(data) {
+  addData(data, 'store.data')
 }
