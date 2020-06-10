@@ -18,6 +18,10 @@ const cheerio = require('cheerio')
 
 const baseurl = 'https://www.750g.com'
 const cookiejar = rp.jar()
+// scrapping by page 
+// you can fix a limit (if you want)
+const minpage = 0
+const maxpage = 10
 
 // ###################
 // ##  Konnector
@@ -80,7 +84,7 @@ async function getName(html) {
     .trim()
 
   // display pseudo
-  log('info', pseudo)
+  log('info', `your pseudo is ${pseudo} !`)
 }
 
 async function getPage(url) {
@@ -112,22 +116,31 @@ async function getCategory($) {
 async function getRecipe(dict){
   let dictRecipe = new Object()
   for(let attr in dict){
-    log('info',`scrape the page ${dict[attr]} ...`)
+    // init numero page
+    let numpage = minpage
     // init array
     dictRecipe[attr] = []  
-    // get html
-    let $ = await getPage(dict[attr])
-    // gather names of recipes
-    $('.c-row__body').each((index, element) => {
-      // init recipe 
-      let recipe = new Object()
-      let title = $(element).find('a').text()
-      let link = baseurl + $(element).find('a').attr('href')    
-      // create dictionary of recipes
-      recipe.title = title
-      recipe.link = link
-      dictRecipe[attr].push(recipe)   
-    })
-    
+    while( (numpage !== -1) && (numpage < maxpage)){
+      log('info',`scrape the page ${dict[attr]}?page=${numpage} ...`)
+      // get html
+      let $ = await getPage(`${dict[attr]}?page=${numpage}`)
+      // gather names of recipes
+      if($('.c-row__body').length > 0){
+        numpage += 1
+        $('.c-row__body').each((index, element) => {
+          // init recipe 
+          let recipe = new Object()
+          let title = $(element).find('a').text()
+          let link = baseurl + $(element).find('a').attr('href')   
+          // create dictionary of recipes
+          recipe.title = title
+          recipe.link = link
+          dictRecipe[attr].push(recipe)   
+        })
+      }else{
+        numpage = -1
+      }
+    }   
   }
+  log('info',dictRecipe)
 }
