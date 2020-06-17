@@ -155,5 +155,5 @@ async function getRecipe(dict) {
 }
 
 async function storeData(data) {
-  addData(data, 'store.data')
+  addData(data, '750g.data')
 }

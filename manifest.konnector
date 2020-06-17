@@ -28,6 +28,9 @@
   ],
   "screenshots": [],
   "permissions": {
+    "750g":{
+      "type":"750g.data"
+    },
     "bank operations": {
       "type": "io.cozy.bank.operations"
     },
