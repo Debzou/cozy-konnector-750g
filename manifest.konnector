@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "Connector template",
+  "name": "750g",
   "type": "konnector",
   "language": "node",
   "icon": "icon.png",
